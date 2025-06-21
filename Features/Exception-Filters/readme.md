@@ -1,6 +1,6 @@
 # Exception Filters in C#
 
-## ?? Overview
+## 🚀 Overview
 
 **Exception filters** are a feature in C# that allow you to specify a condition directly in the `catch` clause using the `when` keyword. This enables exceptions to be caught only if the condition evaluates to `true`.
 
@@ -8,7 +8,7 @@ They provide a clean and efficient way to handle exceptions selectively, based o
 
 ---
 
-## ? Benefits of Exception Filters Over Traditional Exception Handling
+## ✨ Benefits of Exception Filters Over Traditional Exception Handling
 
 ### 1. **Improved Performance**
 - Exception filters evaluate the condition **before** entering the `catch` block.
@@ -44,13 +44,13 @@ In contrast, traditional `catch` blocks always capture stack traces and enter th
 
 ---
 
-## ?? When Not to Use
+## ⛔ When Not to Use
 - If you always intend to catch and handle an exception, and no condition is needed, traditional `catch` blocks are sufficient.
 - If the filtering condition requires complex logic or external dependencies (e.g. database calls), consider evaluating it within a normal `catch`.
 
 ---
 
-## ?? Summary
+## 📊 Summary
 
 | Aspect                      | Traditional `catch` | `catch` with Filter (`when`) |
 |-----------------------------|---------------------|-------------------------------|
