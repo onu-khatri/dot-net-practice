@@ -8,7 +8,7 @@ namespace Features.Exception_Filters
         {
             try
             {
-                return CalculateSalsaryToDonate(user.Salary, user.SalaryPartToDonate);
+                return ExceptionFilters.CalculateSalsaryToDonate(user.Salary, user.SalaryPartToDonate);
             }
             catch (Exception ex)
             {
@@ -27,17 +27,6 @@ namespace Features.Exception_Filters
             }
 
             return 0;
-        }
-
-        private static int CalculateSalsaryToDonate(int salary, int salaryToDonate)
-        {
-            if (salaryToDonate == 0)
-                throw new InvalidOperationException("salary-to-donate can't be zero");
-
-            if (salary < 1000)
-                throw new InvalidOperationException("Salary can't be less than 1000");
-
-            return salary / salaryToDonate;
         }
     }
 
