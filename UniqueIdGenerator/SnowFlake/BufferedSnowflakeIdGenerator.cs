@@ -33,7 +33,7 @@ public class BufferedSnowflakeIdGenerator
     {
         long timestamp = GetCurrentTimestamp();
 
-        if(detectClockRollback(timestamp, out int id))
+        if(detectClockRollback(timestamp, out long id))
         {
             return id;
         }
