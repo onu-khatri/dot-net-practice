@@ -1,9 +1,11 @@
-﻿using System.Collections.Concurrent;
+﻿using NUlid;
+using System.Collections.Concurrent;
 
 public class BufferedSnowflakeIdGenerator
 {
     private readonly long _workerId;
     private readonly long _datacenterId;
+    private readonly bool _useFallbackIfBusy;
 
     private const int SequenceBits = 12;
     private const int WorkerIdBits = 5;
@@ -20,15 +22,22 @@ public class BufferedSnowflakeIdGenerator
     private long _lastTimestamp = -1;
     private ConcurrentQueue<long> _sequenceBuffer = new();
 
-    public BufferedSnowflakeIdGenerator(long datacenterId, long workerId)
+    public BufferedSnowflakeIdGenerator(long datacenterId, long workerId, bool useFallbackIfBusy = true)
     {
         _datacenterId = datacenterId;
         _workerId = workerId;
+        _useFallbackIfBusy = useFallbackIfBusy;
     }
 
     public long GenerateId()
     {
         long timestamp = GetCurrentTimestamp();
+
+        if(detectClockRollback(timestamp, out int id))
+        {
+            return id;
+        }
+
         RefillSequenceIfNextMillisecond(timestamp);
         long sequence = GetSequenceAndWaitForNextMillisecondIfNoSequenceLeft(ref timestamp);
 
@@ -36,6 +45,24 @@ public class BufferedSnowflakeIdGenerator
                 | (_datacenterId << DatacenterIdShift)
                 | (_workerId << WorkerIdShift)
                 | sequence);
+
+    }
+
+    private bool detectClockRollback(long timestamp, out long id)
+    {
+        id = 0;
+        if (timestamp < _lastTimestamp)
+        {
+            if (_useFallbackIfBusy)
+            {
+                id = BitConverter.ToInt64(Ulid.NewUlid().ToByteArray(), 0);
+                return true;
+            }
+
+            throw new InvalidOperationException("Clock moved backwards.");
+        }
+
+        return false;
     }
 
     private long GetSequenceAndWaitForNextMillisecondIfNoSequenceLeft(ref long timestamp)

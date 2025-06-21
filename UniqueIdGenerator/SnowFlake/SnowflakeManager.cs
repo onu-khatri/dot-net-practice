@@ -1,12 +1,16 @@
-﻿public class SnowflakeManager
+﻿using NUlid;
+
+public class SnowflakeManager
 {
     private readonly BufferedSnowflakeIdGenerator[] _shards;
     private readonly int _shardCount;
+    private readonly bool _useFallbackIfBusy;
 
-    public SnowflakeManager(int shardCount = 32, long datacenterId = 1)
+    public SnowflakeManager(int shardCount = 32, long datacenterId = 1, bool useFallbackIfBusy = true)
     {
         _shardCount = shardCount;
         _shards = new BufferedSnowflakeIdGenerator[shardCount];
+        _useFallbackIfBusy = useFallbackIfBusy;
 
         for (int i = 0; i < shardCount; i++)
         {
@@ -22,10 +26,23 @@
 
     public string GenerateTextId()
     {
-        int index = Environment.CurrentManagedThreadId % _shardCount;
-        var id = _shards[index].GenerateId();
+        try
+        {
+            int index = Environment.CurrentManagedThreadId % _shardCount;
+            var id = _shards[index].GenerateId();
 
-        return ToSortableBase64(id);
+            return ToSortableBase64(id);
+        }
+        catch
+        {
+            if (_useFallbackIfBusy)
+            {
+                return Ulid.NewUlid().ToString(); // Fallback to ULID
+            }
+
+            throw;
+        }
+
     }
 
     public static long ConvertTextIDToNumbericId(string id)
