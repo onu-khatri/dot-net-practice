@@ -16,6 +16,8 @@ This system includes:
 - Designed for **100k+ ID/sec throughput**
 - Works in **multi-threaded** or **multi-instance** distributed systems
 - Produces **sortable 64-bit integer IDs**
+- Optional fallback to **ULIDs** for overflow conditions
+- Option for Base62 / Base36 encoding for shorter, URL-friendly IDs
 
 ---
 
@@ -127,7 +129,5 @@ Duplicates found: 0
 ## 🏗️ Future Improvements
 
 - [ ] Redis-backed coordination for global sequence sharing across distributed services
-- [ ] Base62 / Base36 encoding for shorter, URL-friendly IDs
 - [ ] Structured logging and observability (e.g., OpenTelemetry, Serilog)
 - [ ] Package as a reusable, configurable **NuGet library**
-- [ ] Optional fallback to time-based GUIDs or ULIDs for overflow conditions
