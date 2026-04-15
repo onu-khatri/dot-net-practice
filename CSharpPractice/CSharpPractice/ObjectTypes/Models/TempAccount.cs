@@ -10,5 +10,10 @@
         {
             return AvailableBalance;
         }
+
+        public override decimal GetOverdraftLimit()
+        {
+            return 10;
+        }
     }
 }

@@ -1,3 +1,4 @@
 ﻿using CSharpPractice.ObjectTypes;
 
-Test.TestObjectOverride();
+//Test.TestObjectOverride();
+Test.TestEventBasic();

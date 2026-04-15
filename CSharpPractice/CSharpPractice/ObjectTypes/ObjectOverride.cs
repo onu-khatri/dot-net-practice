@@ -3,8 +3,10 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace CSharpPractice.ObjectTypes
 {
-    public static class Test
+    public static partial class Test
     {
+        public static partial void TestEventBasic();
+
         public static void TestObjectOverride()
         {
             SalaryAccount salaryAccount = new SalaryAccount();

@@ -21,6 +21,11 @@
             return MinimumBalanceRequirement;
         }
 
+        public virtual decimal GetOverdraftLimit()
+        {
+            return 0;
+        }
+
         public new void Deposit(decimal amount)
         {
             if (amount <= 0)
@@ -29,7 +34,7 @@
             }
             Balance += amount + 1;
             AvailableBalance += amount + 1;
-            LastTransactionOn = DateTime.Now;
+//            LastTransactionOn = DateTime.Now;
         }
     }
 }
