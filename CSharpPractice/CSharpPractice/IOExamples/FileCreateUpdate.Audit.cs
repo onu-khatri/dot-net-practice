@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace CSharpPractice.IOExamples
@@ -26,10 +23,10 @@ namespace CSharpPractice.IOExamples
                 filePath,
                 FileMode.Create,
                 FileAccess.Write,
-                FileShare.Read);
+                FileShare.Read, bufferSize);
 
-            using var bufferedStream = new BufferedStream(fileStream, bufferSize);
-            using var writer = new StreamWriter(bufferedStream, Encoding.UTF8);
+          //  using var bufferedStream = new BufferedStream(fileStream, bufferSize);
+            using var writer = new StreamWriter(fileStream, Encoding.UTF8);
 
             foreach (var entry in entries)
             {

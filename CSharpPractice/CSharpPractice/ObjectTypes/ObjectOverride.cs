@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection.Metadata.Ecma335;
-
-namespace CSharpPractice.ObjectTypes
+﻿namespace CSharpPractice.ObjectTypes
 {
     public static partial class Test
     {

@@ -1,10 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static System.Environment;
-
-namespace CSharpPractice.ObjectTypes
+﻿namespace CSharpPractice.ObjectTypes
 {
     internal record Person(string Name, int Age);
     internal record struct Point(int X, int Y);

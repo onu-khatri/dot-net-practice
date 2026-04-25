@@ -8,7 +8,7 @@ using CSharpPractice.ObjectTypes;
 
 //FileCreateUpdate.ReadFileUsingStreamReader("D:\\MontuName.txt");
 
-using (var disposeObject = new DisposeObject()) { 
-    //....
-}
+//JsonSerializerTest.SerializeSalaryAccountToJson();
+
+JsonSchemaExporterTest.TestJsonSchemaExporter();
 

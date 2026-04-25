@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace CSharpPractice.IOExamples
 {
     internal static partial class PathExamples

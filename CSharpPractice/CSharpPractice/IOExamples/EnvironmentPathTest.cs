@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CSharpPractice.IOExamples
+﻿namespace CSharpPractice.IOExamples
 {
     internal static partial class EnvironmentPathTest
     {

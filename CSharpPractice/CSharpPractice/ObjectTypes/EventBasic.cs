@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-
-namespace CSharpPractice.ObjectTypes
+﻿namespace CSharpPractice.ObjectTypes
 {
     public static partial class Test
     {        

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace CSharpPractice.IOExamples
+﻿namespace CSharpPractice.IOExamples
 {
     internal static partial class FileCreateUpdate
     {
