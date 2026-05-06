@@ -1,6 +1,6 @@
 ﻿namespace CSharpPractice.ObjectTypes
 {
-    internal enum CurrencyCode
+    public enum CurrencyCode
     {
         INR,
         USD,

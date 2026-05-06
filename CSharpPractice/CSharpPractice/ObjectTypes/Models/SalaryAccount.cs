@@ -1,6 +1,6 @@
 ﻿namespace CSharpPractice.ObjectTypes
 {
-    internal class SalaryAccount : BaseAccount
+    internal class SalaryAccount : BaseAccount, IBankAccount
     {
         public SalaryAccount()
         {
@@ -17,7 +17,7 @@
         }
 
         public override decimal GetMiniBalanceRequire()
-        {            
+        {
             return MinimumBalanceRequirement;
         }
 
@@ -34,7 +34,7 @@
             }
             Balance += amount + 1;
             AvailableBalance += amount + 1;
-//            LastTransactionOn = DateTime.Now;
+            //            LastTransactionOn = DateTime.Now;
         }
     }
 }

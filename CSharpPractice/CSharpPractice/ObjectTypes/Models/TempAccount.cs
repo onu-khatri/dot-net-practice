@@ -1,6 +1,6 @@
 ﻿namespace CSharpPractice.ObjectTypes
 {
-    internal class TempAccount : SalaryAccount
+    internal class TempAccount : SalaryAccount, IBankAccount
     {
         public string TemporaryReferenceId { get; set; } = string.Empty;
         public DateOnly? ValidUntil { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace CSharpPractice.ObjectTypes
 {
-    internal abstract class BaseAccount
+    internal abstract class BaseAccount : IBankAccount
     {
         private int _accountValue = 10;
 
@@ -37,7 +37,7 @@
         public string BankName { get; set; } = string.Empty;
         public string BranchName { get; set; } = string.Empty;
         public string IFSCCode { get; set; } = string.Empty;
-        public string? IBAN { get; private set; }
+        public string? IBAN { get; set; }
 
         public CurrencyCode CurrencyCode { get; set; } = CurrencyCode.INR;
 
