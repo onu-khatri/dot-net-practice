@@ -44,7 +44,7 @@ namespace CSharpPractice.Linq
             Console.WriteLine("Accounts with balance greater than 60000:");
             Console.WriteLine("total high balance accounts: " + fetchedAccounts?.Count);
 
-            foreach (var account in fetchedAccounts ?? [])
+            foreach (var account in fetchedAccounts ?? Enumerable.Empty<T>())
             {
                 Console.WriteLine($"Employee ID: {account.EmployeeId}, SalaryCreditDay: {account.SalaryCreditDay}");
             }
