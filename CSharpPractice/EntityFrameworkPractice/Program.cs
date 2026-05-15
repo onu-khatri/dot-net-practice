@@ -10,24 +10,38 @@ var configuration = new ConfigurationBuilder()
 
 var connectionString = configuration.GetConnectionString("DefaultConnection");
 
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+}
+
 var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
     .UseSqlServer(connectionString)
     .Options;
 
 await using var dbContext = new AppDbContext(dbContextOptions);
 
-await dbContext.Database.MigrateAsync();
+var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+
+if (pendingMigrations.Any())
+{
+    await dbContext.Database.MigrateAsync();
+}
 
 var customer = new Customer
 {
     Name = "John Doe",
-    Email = "Montu@email.com,"
+    Email = $"Montu{DateTime.Now.Ticks}@email.com"
 };
 
 await dbContext.Customers.AddAsync(customer);
 await dbContext.SaveChangesAsync();
 
-var customers = dbContext.Customers.Where(t => t.Id > 1);//.ToListAsync();
+var customers = await dbContext.Customers
+    .AsNoTracking()
+    .Where(t => t.Id > 1)
+    .OrderBy(t => t.Id)
+    .ToListAsync();
 
 foreach (var c in customers)
 {

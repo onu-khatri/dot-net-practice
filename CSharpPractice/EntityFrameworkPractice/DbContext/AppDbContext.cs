@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EntityFrameworkPractice.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace EntityFrameworkPractice.DbContext
 {
@@ -18,27 +15,37 @@ namespace EntityFrameworkPractice.DbContext
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Configure the Customer entity
+
             modelBuilder.Entity<Customer>(entity =>
             {
+                entity.ToTable("Customers");
                 entity.HasKey(e => e.Id);
+
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email)
+                      .IsRequired()
+                      .HasMaxLength(100)
+                      .IsUnicode(false);
+
+                entity.HasIndex(e => e.Email).IsUnique();
             });
 
-            // Configure the Order entity
             modelBuilder.Entity<Order>(entity =>
             {
+                entity.ToTable("Orders");
                 entity.HasKey(e => e.Id);
+
                 entity.Property(e => e.OrderDate).IsRequired();
                 entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
-                // Configure the relationship between Order and Customer
+
+                entity.HasIndex(e => e.CustomerId);
+                entity.HasIndex(e => new { e.CustomerId, e.OrderDate });
+
                 entity.HasOne(e => e.Customer)
                       .WithMany(c => c.Orders)
                       .HasForeignKey(e => e.CustomerId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
-
         }
     }
 }
