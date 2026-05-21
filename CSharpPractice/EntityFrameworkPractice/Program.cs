@@ -1,7 +1,9 @@
-﻿using EntityFrameworkPractice.DbContext;
-using EntityFrameworkPractice.Entities;
+﻿using EntityFrameworkPractice;
+using EntityFrameworkPractice.DbContext;
+using EntityFrameworkPractice.Testers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -15,41 +17,27 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 }
 
-var dbContextOptions = new DbContextOptionsBuilder<AppDbContext>()
-    .UseSqlServer(connectionString)
-    .Options;
+var services = new ServiceCollection();
 
-await using var dbContext = new AppDbContext(dbContextOptions);
+services.AddSingleton<IConfiguration>(configuration);
+services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+services.AddScoped<CustomerDataService>();
+services.AddScoped<CustomerTester>();
 
-var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
-
-if (pendingMigrations.Any())
+await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions
 {
-    await dbContext.Database.MigrateAsync();
-}
+    ValidateOnBuild = true,
+    ValidateScopes = true
+});
 
-var customer = new Customer
-{
-    Name = "John Doe",
-    Email = $"Montu{DateTime.Now.Ticks}@email.com"
-};
-
-await dbContext.Customers.AddAsync(customer);
-await dbContext.SaveChangesAsync();
-
-var customers = await dbContext.Customers
-    .AsNoTracking()
-    .Where(t => t.Id > 1)
-    .OrderBy(t => t.Id)
-    .ToListAsync();
-
-foreach (var c in customers)
-{
-    Console.WriteLine($"Customer ID: {c.Id}, Name: {c.Name}, Email: {c.Email}");
-}
+await using var scope = serviceProvider.CreateAsyncScope();
+var tester = scope.ServiceProvider.GetRequiredService<CustomerTester>();
+await tester.RunAsync();
 
 // dotnet tool install --global dotnet-ef
 // dotnet ef migrations add InitialCreate
 // dotnet ef database update
 // dotnet ef migrations remove
 
+// dependency injection in .net
+// Inversion of Control (IoC) container

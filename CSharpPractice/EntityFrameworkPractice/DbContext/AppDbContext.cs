@@ -15,37 +15,6 @@ namespace EntityFrameworkPractice.DbContext
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<Customer>(entity =>
-            {
-                entity.ToTable("Customers");
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Email)
-                      .IsRequired()
-                      .HasMaxLength(100)
-                      .IsUnicode(false);
-
-                entity.HasIndex(e => e.Email).IsUnique();
-            });
-
-            modelBuilder.Entity<Order>(entity =>
-            {
-                entity.ToTable("Orders");
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.OrderDate).IsRequired();
-                entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
-
-                entity.HasIndex(e => e.CustomerId);
-                entity.HasIndex(e => new { e.CustomerId, e.OrderDate });
-
-                entity.HasOne(e => e.Customer)
-                      .WithMany(c => c.Orders)
-                      .HasForeignKey(e => e.CustomerId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
         }
     }
 }
