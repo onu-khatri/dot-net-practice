@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EntityFrameworkPractice;
 
-public sealed class CustomerDataService
+public sealed class CustomerDataService : ICustomerDataService
 {
     private readonly AppDbContext _dbContext;
 

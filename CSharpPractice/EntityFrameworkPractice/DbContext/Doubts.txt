@@ -1,0 +1,2 @@
+Q: why DbContext don't have a interface? (Montu)
+Q: Explain the usage of IDesignTimeDbContextFactory (Montu)

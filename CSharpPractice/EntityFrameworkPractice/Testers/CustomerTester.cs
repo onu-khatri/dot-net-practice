@@ -1,10 +1,10 @@
 namespace EntityFrameworkPractice.Testers;
 
-public sealed class CustomerTester
+public sealed class CustomerTester : ICustomerTester
 {
-    private readonly CustomerDataService _customerDataService;
+    private readonly ICustomerDataService _customerDataService;
 
-    public CustomerTester(CustomerDataService customerDataService)
+    public CustomerTester(ICustomerDataService customerDataService)
     {
         ArgumentNullException.ThrowIfNull(customerDataService);
         _customerDataService = customerDataService;

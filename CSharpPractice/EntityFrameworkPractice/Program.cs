@@ -21,8 +21,8 @@ var services = new ServiceCollection();
 
 services.AddSingleton<IConfiguration>(configuration);
 services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
-services.AddScoped<CustomerDataService>();
-services.AddScoped<CustomerTester>();
+services.AddScoped<ICustomerDataService, CustomerDataService>();
+services.AddScoped<ICustomerTester, CustomerTester>();
 
 await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions
 {
@@ -31,7 +31,7 @@ await using var serviceProvider = services.BuildServiceProvider(new ServiceProvi
 });
 
 await using var scope = serviceProvider.CreateAsyncScope();
-var tester = scope.ServiceProvider.GetRequiredService<CustomerTester>();
+var tester = scope.ServiceProvider.GetRequiredService<ICustomerTester>();
 await tester.RunAsync();
 
 // dotnet tool install --global dotnet-ef
