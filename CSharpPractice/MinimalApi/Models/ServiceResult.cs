@@ -1,6 +1,6 @@
 namespace MinimalApi.Models;
 
-internal enum ServiceResultStatus
+public enum ServiceResultStatus
 {
     Success,
     ValidationError,
@@ -8,7 +8,7 @@ internal enum ServiceResultStatus
     NotFound
 }
 
-internal sealed record ServiceResult<T>(ServiceResultStatus Status, T? Value, string? Error)
+public sealed record ServiceResult<T>(ServiceResultStatus Status, T? Value, string? Error)
 {
     public static ServiceResult<T> Success(T value) => new(ServiceResultStatus.Success, value, null);
 

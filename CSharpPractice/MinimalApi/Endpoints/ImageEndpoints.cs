@@ -1,3 +1,4 @@
+using MinimalApi.Filters;
 using MinimalApi.Models;
 using MinimalApi.Services;
 
@@ -10,6 +11,10 @@ internal static class ImageEndpoints
     /// </summary>
     /// <param name="app">The route builder instance.</param>
     /// <returns>The route builder instance for chaining.</returns>
+    /// 
+
+    // what is extension method in c#?
+    // An extension method in C# is a static method that allows you to add new functionality to existing types without modifying their source code or creating a new derived type. Extension methods are defined in static classes and are marked with the `this` keyword in the first parameter, which specifies the type they extend.
     public static IEndpointRouteBuilder MapImageEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/images");
@@ -20,7 +25,10 @@ internal static class ImageEndpoints
             return Results.Ok(imageNames);
         });
 
-        group.MapGet("/{name}", (string name, ImageService imageService) =>
+        // example to apply endpoint filter over a group of endpoints
+        var imageWithValidations = group.MapGroup("/").AddEndpointFilterFactory(ImageEndpointFilter.ValidateStringArgumentFactory);
+
+        imageWithValidations.MapGet("/{name}", (string name, ImageService imageService) =>
         {
             var image = imageService.GetByName(name);
             return image is not null
@@ -28,7 +36,7 @@ internal static class ImageEndpoints
                 : Results.NotFound($"Image '{name}' was not found.");
         });
 
-        group.MapPost("", async (IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
+        imageWithValidations.MapPost("", async (IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
         {
             var result = await imageService.AddAsync(file, cancellationToken);
             return result.Status switch
@@ -40,7 +48,7 @@ internal static class ImageEndpoints
             };
         });
 
-        group.MapPut("/{name}", async (string name, IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
+        imageWithValidations.MapPut("/{name}", async (string name, IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
         {
             var result = await imageService.UpdateAsync(name, file, cancellationToken);
             return result.Status switch
@@ -52,7 +60,7 @@ internal static class ImageEndpoints
             };
         });
 
-        group.MapDelete("/{name}", (string name, ImageService imageService) =>
+        imageWithValidations.MapDelete("/{name}", (string name, ImageService imageService) =>
         {
             return imageService.Delete(name)
                 ? Results.NoContent()
