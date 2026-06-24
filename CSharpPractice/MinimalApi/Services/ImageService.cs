@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace MinimalApi.Services;
 
-internal sealed class ImageService
+internal sealed class ImageService : IImageService
 {
     private readonly ConcurrentDictionary<string, StoredImage> _images = new(StringComparer.OrdinalIgnoreCase);
 

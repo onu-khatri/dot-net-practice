@@ -28,7 +28,7 @@ internal static class ImageEndpoints
         // example to apply endpoint filter over a group of endpoints
         var imageWithValidations = group.MapGroup("/").AddEndpointFilterFactory(ImageEndpointFilter.ValidateStringArgumentFactory);
 
-        imageWithValidations.MapGet("/{name}", (string name, ImageService imageService) =>
+        imageWithValidations.MapGet("/{name}", (string name, IImageService imageService) =>
         {
             var image = imageService.GetByName(name);
             return image is not null
@@ -36,7 +36,7 @@ internal static class ImageEndpoints
                 : Results.NotFound($"Image '{name}' was not found.");
         });
 
-        imageWithValidations.MapPost("", async (IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
+        imageWithValidations.MapPost("", async (IFormFile file, IImageService imageService, CancellationToken cancellationToken) =>
         {
             var result = await imageService.AddAsync(file, cancellationToken);
             return result.Status switch
@@ -48,7 +48,7 @@ internal static class ImageEndpoints
             };
         });
 
-        imageWithValidations.MapPut("/{name}", async (string name, IFormFile file, ImageService imageService, CancellationToken cancellationToken) =>
+        imageWithValidations.MapPut("/{name}", async (string name, IFormFile file, IImageService imageService, CancellationToken cancellationToken) =>
         {
             var result = await imageService.UpdateAsync(name, file, cancellationToken);
             return result.Status switch
@@ -60,7 +60,7 @@ internal static class ImageEndpoints
             };
         });
 
-        imageWithValidations.MapDelete("/{name}", (string name, ImageService imageService) =>
+        imageWithValidations.MapDelete("/{name}", (string name, IImageService imageService) =>
         {
             return imageService.Delete(name)
                 ? Results.NoContent()

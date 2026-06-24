@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace MinimalApi.Services;
 
-public sealed class UserService
+public sealed class UserService : IUserService
 {
     private readonly ConcurrentDictionary<Guid, UserInfo> _users = new();
 

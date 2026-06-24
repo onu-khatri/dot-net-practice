@@ -1,10 +1,13 @@
 using Azure.Core.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Identity.Web;
 using MinimalApi.Endpoints;
+using MinimalApi.Filters;
 using MinimalApi.Services;
 using Scalar.AspNetCore;
+using System.Reflection.PortableExecutable;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -23,8 +26,9 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
-builder.Services.AddSingleton<ImageService>();
-builder.Services.AddSingleton<UserService>();
+builder.Services.AddSingleton<IImageService, ImageService>();
+builder.Services.AddSingleton<IUserService, UserService>();
+builder.Services.AddScoped<IAsyncActionFilter, SessionDbValidationAsyncAttribute>();
 
 
 // explanation of AddProblemDetails:
@@ -51,6 +55,8 @@ builder.Services.Configure<RouteOptions>(options =>
 
 var app = builder.Build();
 
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -63,12 +69,59 @@ if (app.Environment.IsDevelopment())
 
     app.MapOpenApi();
     app.MapScalarApiReference();
-    
+
 
     // dotnet add package Scalar.AspNetCore
     // https://localhost:7218/openapi/v1.json
     // https://localhost:7218/scalar
 }
+
+
+// UseWhen vs MapWhen
+// UseWhen is used to conditionally apply middleware based on the request path or other criteria, allowing you to customize the behavior of the application for specific routes or scenarios. It handeover the control to the next middleware of main pipeline.
+// MapWhen is used to conditionally map a specific request path to a separate branch of the middleware pipeline, allowing you to create a separate set of middleware and endpoints for that specific route or scenario. It creates a new branch of the middleware pipeline for the specified request path, allowing you to define a separate set of middleware and endpoints for that route.
+
+// use custome request logging middleware using the app.use() method to add the middleware to the request processing pipeline, allowing it to log details of incoming requests and outgoing responses for debugging and monitoring purposes.
+
+// api/users
+// use custome exception handling middleware
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/WeatherForecast"), appBuilder =>
+{
+    
+    appBuilder.UseMiddleware<ExceptionHandlingMiddleware>();
+    appBuilder.Use(async (context, next) =>
+    {
+        await next();
+    });
+});
+
+// -- -- -- UseWhen add Exception handling -- --- --- -- Endpoint execute
+
+app.MapWhen(
+    context =>
+        context.Request.Path.StartsWithSegments("/WeatherForecast") &&
+        context.Request.Headers["X-Api-Version"] == "2",
+    apiV2App =>
+    {
+        apiV2App.Use(async (context, next) =>
+        {
+            await next();
+        });
+
+        apiV2App.UseRouting();
+        apiV2App.UseAuthorization();
+        apiV2App.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
+    });
+
+// create a custome middleware for run and return only data without reaching endpoints
+
+
+// -- -- -- MapWhen
+//                  --- add API versioning
+
 
 // UseStatusCodePages is used to configure the application to return a default status code response for HTTP status codes that do not have a specific response body defined.
 // For example, if a client makes a request that results in a 404 (Not Found) status code, the application will return a default response with the status code and a generic message indicating that the resource was not found.
@@ -78,9 +131,35 @@ app.UseStatusCodePages();
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.Use(next =>
+{
+    return async (context) =>
+    {
+        // Log the incoming request details
+        Console.WriteLine($"Incoming Request: {context.Request.Method} {context.Request.Path}");
+       
+        // Call the next middleware in the pipeline
+        await next(context);
+        // Log the outgoing response details
+        Console.WriteLine($"Outgoing Response: {context.Response.StatusCode}");
+    };
+});
+
+app.Use(async (context, next) =>
+{
+    // Log the incoming request details
+    Console.WriteLine($"Incoming Request: {context.Request.Method} {context.Request.Path}");
+    // Call the next middleware in the pipeline
+    await next();
+    // Log the outgoing response details
+    Console.WriteLine($"Outgoing Response: {context.Response.StatusCode}");
+});
 
 // The Webapplication stores the registered endpoints in a collection, and when a request is made to the application, it matches the incoming request to the appropriate endpoint based on the HTTP method and route template defined for each endpoint.
 // The collection is shared by the RoutingMiddleware and the EndpointMiddleware, which are responsible for routing incoming requests to the correct endpoint and executing the associated logic for that endpoint.
@@ -94,7 +173,22 @@ app.MapControllers();
 // 4. Endpoint middleware (e.g., app.UseEndpoints())
 
 app.MapHealthChecks("/healthz");
-app.MapImageEndpoints();
-app.MapUserEndpoints();
 
+app.MapImageEndpoints()
+    .MapUserEndpoints();
+
+// redirect to 404 page if no route found
+app.MapFallback(async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status404NotFound;
+    await context.Response.WriteAsync("404 Not Found");
+});
+
+// this will reach for every request of the main pipeline, so it should be placed at the end of the middleware pipeline to ensure that all other middleware and endpoints have a chance to process the request before it reaches this point.
+app.Run(async (context) =>
+{
+    context.Response.Headers["sys-key"] = "abck";
+});
+
+// application starts listening for incoming HTTP requests and begins processing them through the configured middleware pipeline, routing requests to the appropriate endpoints based on the defined routes and executing the associated logic for each endpoint.
 app.Run();
