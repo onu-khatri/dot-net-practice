@@ -31,7 +31,7 @@ internal static class UserEndpoints
             return user is not null
                 ? Results.Ok(user)
                 : Results.NotFound($"User with id '{id}' was not found.");
-        });
+        }).RequireAuthorization();
 
         //api/users
         group.MapPost("", ([FromBody] UserRequest request, [FromServices] IUserService userService) =>
@@ -47,7 +47,7 @@ internal static class UserEndpoints
                 ServiceResultStatus.Success => Results.Created($"/api/users/{result.Value!.Id}", result.Value),
                 _ => Results.Problem("Unexpected error occurred while creating user.")
             };
-        });
+        }).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // We can't use ValidationHelper.ValidateGuidAsync with this endpoint here, because id is 3rd argument, and in ValidationHelper.ValidateGuidAsync we are looking for first argument of type Guid, which is id in this case. But if we add another argument before id, then it will be 4th argument and ValidationHelper.ValidateGuidAsync won't find it and will return bad request for all requests.
         // So we can use EndpointfilterFactory to create a filter that will validate id and add it to this endpoint.
@@ -62,7 +62,10 @@ internal static class UserEndpoints
                 ServiceResultStatus.Success => Results.Ok(result.Value),
                 _ => Results.Problem("Unexpected error occurred while updating user.")
             };
-        }).AddEndpointFilterFactory(ValidationHelper.ValidateIdFactory);
+        })
+            .AddEndpointFilterFactory(ValidationHelper.ValidateIdFactory)
+            .RequireAuthorization(claim => claim.RequireClaim("permission", "User.Update"));
+        
 
         // Prefere middlewares over the endpoint filters for cross-cutting concerns like validation, logging, etc. Endpoint filters are more suitable for concerns that are specific to a particular endpoint or group of endpoints or where the functionality relies on endpoint concepts such as IResult or EndpointFilterInvocationContext, while middlewares can be applied globally to all endpoints in the application.
         group.MapDelete("/{id:guid}", (Guid id, IUserService userService) =>

@@ -1,13 +1,19 @@
 using Azure.Core.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using MinimalApi.Endpoints;
 using MinimalApi.Filters;
 using MinimalApi.Services;
 using Scalar.AspNetCore;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection.PortableExecutable;
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -18,11 +24,57 @@ using System.Text.Json.Serialization;
 // Kestrel is the default web server used by ASP.NET Core applications, and it is configured through the WebApplicationBuilder. When you create a new instance of the WebApplicationBuilder using the CreateBuilder method, it automatically sets up Kestrel as the web server for your application. You can further configure Kestrel by using the ConfigureKestrel method on the WebApplicationBuilder, which allows you to specify options such as the ports to listen on, SSL settings, and other server-related configurations. In summary, Kestrel is an integral part of the ASP.NET Core application hosting model, and it is configured through the WebApplicationBuilder to serve your web application efficiently.
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
-//    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+// add Jwt Bearer authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = jwtSettings.GetValue<string>("Key"); 
+var issuer = jwtSettings.GetValue<string>("Issuer");
+var audience = jwtSettings.GetValue<string>("Audience");
+// explain key, issuer, and audience in Jwt Bearer authentication
+// In Jwt Bearer authentication, the key is a secret string used to sign and verify the JWT tokens. It ensures that the token has not been tampered with and is valid. The issuer is the entity that issues the JWT token, typically the authentication server or identity provider. It identifies the source of the token and helps validate its authenticity. The audience is the intended recipient of the JWT token, usually the application or service that will consume the token. It ensures that the token is being used by the correct party and prevents misuse by unauthorized entities.
 
-builder.Services.AddControllers();
+if (Encoding.UTF8.GetByteCount(key) < 32)
+{
+    throw new InvalidOperationException("The JWT key must be at least 32 bytes long.");
+}
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.Authority = issuer;
+    options.Audience = audience;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+
+        NameClaimType = ClaimTypes.Name,
+        RoleClaimType = ClaimTypes.Role,        
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
+
+
+
+    // Websockets, SignalR, SSE
+
+    // Add services to the container.
+    // builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+    //    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+    builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
@@ -177,6 +229,44 @@ app.MapHealthChecks("/healthz");
 app.MapImageEndpoints()
     .MapUserEndpoints();
 
+// User, Role, UserRoles, Permission, RolePermission,
+var authGroup = app.MapGroup("Auth");
+authGroup.MapPost("/login", async (LoginRequest request) =>
+{
+    // Validate the login credentials
+    if (request.Email == "admin@admin.com" && request.Password == "password")
+    {
+        // Generate a JWT token
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, request.Email),
+            new Claim(ClaimTypes.Role, "Admin"),
+            new Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("permission", "User.Update")
+        };
+
+        var expireAt = DateTime.UtcNow.AddMinutes(10);
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: expireAt,
+            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256)
+        );
+
+        var encodedToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+        // Return the token in the response
+        return Results.Ok(new { Token = encodedToken });
+    }
+    else
+    {
+        // Invalid credentials, return unauthorized response
+        return Results.Unauthorized();
+    }
+});
+
 // redirect to 404 page if no route found
 app.MapFallback(async context =>
 {
@@ -192,3 +282,4 @@ app.Run(async (context) =>
 
 // application starts listening for incoming HTTP requests and begins processing them through the configured middleware pipeline, routing requests to the appropriate endpoints based on the defined routes and executing the associated logic for each endpoint.
 app.Run();
+
